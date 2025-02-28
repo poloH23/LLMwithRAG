@@ -3,12 +3,12 @@ import time
 import random
 import requests
 from bs4 import BeautifulSoup
-from lib.Utils import get_module
+from lib.Utils import GetRoot
 from urllib.parse import urlparse, urlunparse, urlencode
 
 
 # Load environment variables
-get_module()
+GetRoot()
 
 # 記錄所有法規內的法條
 lis_laws = []

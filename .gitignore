@@ -14,9 +14,14 @@ __pycache__/
 .idea/
 
 # Ignored file formats
+*.txt
+*.json
 *.png
 *.keras
 *.pt
 
 # Ignored folders
 models/
+
+# Ignored files
+.token

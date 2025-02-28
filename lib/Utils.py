@@ -3,11 +3,11 @@ import sys
 from dotenv import load_dotenv
 
 
-def get_root() -> None:
+def GetRoot() -> None:
     """
     Set the root directory of the project.
     Usage in Python script:
-    get_root()
+    GetRoot()
     root = os.environ['PROJECT_ROOT']
     :return:None
     """
@@ -19,8 +19,8 @@ def get_root() -> None:
     os.environ['PROJECT_ROOT'] = project_root
     return None
 
-def get_module():
-    get_root()
+def GetModule():
+    GetRoot()
 
     # get and set the environment variables
     python_path = os.environ.get('PYTHONPATH')
@@ -32,5 +32,5 @@ def get_module():
 
 
 if __name__ == '__main__':
-    print(get_root())
+    print(GetRoot())
     print(os.getenv('INPUT_PATH'))
