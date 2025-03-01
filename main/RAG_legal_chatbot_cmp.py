@@ -56,7 +56,7 @@ lis_queries = []
 with open(fil_query_path, "r", encoding="utf-8") as f:
     for line in f:
         if "Case" in line:
-            query = line.strip("\n").split(" ")[-1]
+            query = line.strip("\n").split(": ")[-1]
             lis_queries.append(query)
 lis_queries = lis_queries[4:]
 

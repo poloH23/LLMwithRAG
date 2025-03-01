@@ -7,7 +7,7 @@ from transformers import pipeline
 from transformers import AutoTokenizer, AutoModel
 
 
-def LoadEmbeddings(embedding_path: str) -> tuple:
+def LoadEmbeddings(embedding_path: str) -> tuple[list, np.array]:
     with open(embedding_path, 'r') as f:
         data = json.load(f)
     texts = [item["text"] for item in data]
@@ -24,7 +24,7 @@ def SearchFaissIdx(
         model_name: str,
         query: str,
         idx: Any,
-        texts: str,
+        texts: list,
         top_k: int,
         max_length: int
 ) -> list:
@@ -46,14 +46,17 @@ def SearchFaissIdx(
     results = [{"text": texts[idx], "score": distances[0][i]} for i, idx in enumerate(indices[0])]
     return results
 
-def LlamaGenerateResponse(model_name: str, context: str, query: str, max_token: int) -> str:
+def LlamaGenerateResponse(
+        model_name: str,
+        context: str,
+        query: str,
+        max_token: int
+) -> str:
     # 可使用的模型名稱
     lis_models = [
-        "lianghsun/Llama-3.2-Taiwan-Legal-1B-Instruct",
         "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct",
         "meta-llama/Llama-3.2-1B-Instruct",
-        "meta-llama/Llama-3.2-3B-Instruct",
-        "meta-llama/Llama-3.1-8B-Instruct"
+        "meta-llama/Llama-3.2-3B-Instruct"
     ]
 
     # 確認所使用的模型名稱
@@ -79,13 +82,18 @@ def LlamaGenerateResponse(model_name: str, context: str, query: str, max_token: 
 
     # 提示詞
     prompt = f"""
-    你是一個台灣法律諮詢顧問。請仔細閱讀使用者提供的事實案例，檢索台灣法律條文，並根據案例中所述行為識別可能涉及的法規與條文。請在回答中包含：
-    1.引用相關法律名稱與條號。
-    2.簡短解釋該法條的法律構成要件，對照案例事實與構成要件，簡短指出是否符合。
-    3.最後簡短提供法律程序上的初步建議，如是否需律師協助或可行的解決途徑。
-    4.如果無法確定或需要更多資訊請直接說明，不要提供未經查證的法律見解並在末尾提醒此為非正式法律意見。
-    下列為檢索法條後的相關資訊: {context}
-    """
+        你是一個台灣法律諮詢顧問。請閱讀使用者提供的問題，檢索台灣法律條文，並根據案例中所述行為識別可能涉及的法規與條文。
+        請在回答中包含：
+        1.回答法規名稱、法條編號和內容。
+        2.簡短說明使用者的敘述有哪些內容，符合法條的構成要件。
+        3.最後簡短說明法律程序上初步建議，例如建議尋求律師協助或可能的第三方協助。
+        4.對於不確定的內容請直接回答不知道，不可以提供未經查證的法律解釋。
+        5.在回答的最後需要提醒此為非正式法律意見。
+        """
+    if context is None or len(context) == 0:
+        prompt = prompt
+    else:
+        prompt += f"下列為檢索法條後的參考資料，請摘要重點做為參考: {context}"
 
     # 送入模型的段落，包含提示詞和使用者提問
     messages = [
