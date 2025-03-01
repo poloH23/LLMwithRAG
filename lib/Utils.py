@@ -36,13 +36,56 @@ def GetHfToken() -> Optional[str]:
     GetRoot()
 
     # Get ".token" file
-    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("HF_TOKEN")
+    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("TOKEN")
 
     # Get HuggingFace token
     if os.path.exists(fil_token):
-        with open(fil_token, "r") as fil_token:
-            hf_token = fil_token.read().strip()
-            command = f"export HUGGINGFACE_TOKEN={hf_token}"
-            os.system(command)
+        with open(fil_token, "r") as file:
+            for line in file:
+                key, _, value = line.partition("=")  # 解析 key=value 格式
+                if key.strip() == "HUGGINGFACE_TOKEN":
+                    hf_token = value.strip()
+                    command = f"export HUGGINGFACE_TOKEN={hf_token}"
+                    os.system(command)
+                    break
             return ">>> HuggingFace token applied."
     return None
+
+def GetLineAccess() -> Optional[str]:
+    # Load environment variables
+    GetRoot()
+
+    # Get ".token" file
+    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("TOKEN")
+
+    # Get Line Access
+    if os.path.exists(fil_token):
+        line_access = None
+        with open(fil_token, "r") as file:
+            for line in file:
+                key, _, value = line.partition("=")  # 解析 key=value 格式
+                if key.strip() == "LINE_CHANNEL_ACCESS_TOKEN":
+                    line_access = value.strip()
+                    break
+            return line_access
+    return None
+
+def GetLineSecret() -> Optional[str]:
+    # Load environment variables
+    GetRoot()
+
+    # Get ".token" file
+    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("TOKEN")
+
+    # Get Line Secret
+    if os.path.exists(fil_token):
+        line_secret = None
+        with open(fil_token, "r") as file:
+            for line in file:
+                key, _, value = line.partition("=")  # 解析 key=value 格式
+                if key.strip() == "LINE_CHANNEL_SECRET":
+                    line_secret = value.strip()
+                    break
+            return line_secret
+    return None
+

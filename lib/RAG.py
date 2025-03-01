@@ -150,3 +150,156 @@ def LlmWithRAG(
     # 取得回覆
     answer = LlamaGenerateResponse(model_name=llm_model, context=context, query=query, max_token=max_token)
     return answer
+
+
+def LlamaResponse(
+        embeddings_path: str,
+        query: str
+) -> str:
+    # 加載向量數據
+    texts, embeddings = LoadEmbeddings(embedding_path=embeddings_path)
+
+    # 建立 FAISS 索引
+    index = CreateFaissIdx(embeddings=embeddings)
+
+    # 檢索相關內容
+    top_results = SearchFaissIdx(
+        query=query,
+        idx=index,
+        texts=texts,
+        top_k=8
+    )
+
+    # 將檢索內容合併為上下文
+    context = "\n".join([result["text"] for result in top_results])
+
+    # 確認所使用的模型名稱
+    model_name = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
+
+    # 檢查是否可以使用 GPU
+    if torch.cuda.is_available():
+        device_map = {"": 0}
+    else:
+        device_map = "auto"
+
+    # 設定提示詞
+    prompt = f"""
+    你是一個台灣法律諮詢顧問。請閱讀使用者提供的問題，檢索台灣法律條文，並根據案例中所述行為識別可能涉及的法規與條文。
+    請在回答中包含：
+    1.回答法規名稱、法條編號和內容。
+    2.簡短說明使用者的敘述有哪些內容，符合法條的構成要件。
+    3.最後簡短說明法律程序上初步建議，例如建議尋求律師協助或可能的第三方協助。
+    4.對於不確定的內容請直接回答不知道，不可以提供未經查證的法律解釋。
+    5.在回答的最後需要提醒此為非正式法律意見。
+    """
+    if context is None or len(context) == 0:
+        prompt = prompt
+    else:
+        prompt += f"下列為檢索法條後的參考資料，請摘要重點做為參考: {context}"
+
+    # 調用 LLM
+    pipe = pipeline(
+        "text-generation",
+        model=model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=device_map,
+        temperature=0.5
+        # return_full_text=False
+    )
+
+    # 送入模型的段落，包含提示詞和使用者提問
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": query}
+    ]
+
+    # 模型推論生成的結果
+    outputs = pipe(
+        messages,
+        max_new_tokens=512
+    )
+
+    # 取得模型結果並返回
+    result = outputs[0]["generated_text"][-1]["content"]
+    result = result.replace("system", '').replace("user", '')
+    return result
+
+
+def LlamaJudgement(
+        answer_x: str,
+        answer_y: str,
+) -> str:
+    # 使用語言模型
+    model_name = "lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct"
+
+    # 檢查是否可以使用 GPU
+    if torch.cuda.is_available():
+        device_map = {"": 0}
+    else:
+        device_map = "auto"
+
+    # 調用 LLM
+    pipe = pipeline(
+        "text-generation",
+        model=model_name,
+        torch_dtype=torch.bfloat16,
+        device_map=device_map,
+        temperature=0.5
+        # return_full_text=False
+    )
+
+    # 設定提示詞
+    prompt = """
+    你是一個台灣法律諮詢顧問，請閱讀"回答1"和"回答2"的內容，並根據法條使用的正確性和回答內容的正確性，告訴我哪一個回答比較妥當。
+    請回覆我"回答1"或"回答2"。
+    """
+
+    # 設定問題
+    query = f"""
+    "回答1": {answer_x}\n
+    "回答2": {answer_y}
+    """
+
+    # 讓模型選擇哪一個回答比較恰當
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": query}
+    ]
+
+    # 模型推論生成的結果
+    outputs = pipe(
+        messages,
+        max_new_tokens=512
+    )
+    judgement = outputs[0]["generated_text"][-1]["content"]
+    return judgement
+
+
+def ResponseWithJudgement(
+        query: str
+) -> str:
+    # 產生兩個回答
+    answer_1 = LlamaResponse(query=query)
+    answer_1 = answer_1.replace("\n", '').replace("。", '。\n')
+
+    answer_2 = LlamaResponse(query=query)
+    answer_2 = answer_2.replace("\n", '').replace("。", '。\n')
+
+    # 利用迴圈取得最佳回覆
+    judgement_tag = True
+    final_answer = ''
+    while judgement_tag:
+        # 選擇適當的回答
+        judgement = LlamaJudgement(
+            answer_x=answer_1,
+            answer_y=answer_2
+        )
+
+        # 選擇最後的回答
+        if "回答1" in judgement:
+            final_answer = answer_1
+            judgement_tag = False
+        if "回答2" in judgement:
+            final_answer = answer_2
+            judgement_tag = False
+    return final_answer
