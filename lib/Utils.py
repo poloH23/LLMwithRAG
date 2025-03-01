@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Optional
 from dotenv import load_dotenv
 
 
@@ -30,7 +31,18 @@ def GetModule():
             if path not in sys.path:
                 sys.path.append(path)
 
+def GetHfToken() -> Optional[str]:
+    # Load environment variables
+    GetRoot()
 
-if __name__ == '__main__':
-    print(GetRoot())
-    print(os.getenv('INPUT_PATH'))
+    # Get ".token" file
+    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("HF_TOKEN")
+
+    # Get HuggingFace token
+    if os.path.exists(fil_token):
+        with open(fil_token, "r") as fil_token:
+            hf_token = fil_token.read().strip()
+            command = f"export HUGGINGFACE_TOKEN={hf_token}"
+            os.system(command)
+            return ">>> HuggingFace token applied."
+    return None

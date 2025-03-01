@@ -1,27 +1,20 @@
 import os
-import json
-import pathlib
-from tqdm import tqdm
 from lib.Utils import GetRoot
-from lib.Embedding import GetHfToken
+from lib.Utils import GetHfToken
 from lib.Embedding import EmbeddingByMiniLM
 from lib.Embedding import EmbeddingByLlama
 from lib.Embedding import ProcessLawText
 from lib.Embedding import GenerateChunksWithOverlap
 from lib.Embedding import ChunkEmbeddingByLlama
 from lib.Embedding import GenerateChunksWithOverlapChar
-from sentence_transformers import SentenceTransformer
 
 
 # Load environment variables
 GetRoot()
 
-# Create result saving directory
-dir_embeddings = os.path.join(
-    os.environ.get("PROJECT_ROOT") + os.getenv("DIR_DATA"),
-    "embeddings"
-)
-os.makedirs(dir_embeddings, exist_ok=True)
+# Add HuggingFace token
+token_info = GetHfToken()
+print(token_info) if token_info is not None else print(">>> HuggingFace token NOT found.")
 
 # Obtain the input data
 fil_laws_path = os.path.join(
@@ -30,12 +23,14 @@ fil_laws_path = os.path.join(
     "laws_and_content.txt"
 )
 
-# Add HuggingFace token
-token_info = GetHfToken()
-print(token_info) if token_info is not None else print(">>> HuggingFace token NOT found.")
+# Create result saving directory
+dir_embeddings = os.path.join(
+    os.environ.get("PROJECT_ROOT") + os.getenv("DIR_DATA"),
+    "embeddings"
+)
+os.makedirs(dir_embeddings, exist_ok=True)
 
 
-"""
 ########## Condition 1 ##########
 # Embedding model: sentence-transformers/all-MiniLM-L6-v2
 # Chunk: 每一條法條
@@ -54,14 +49,13 @@ EmbeddingByMiniLM(
     model_name=model_name,
     batch_size=32
 )
-"""
 
-"""
+
 ########## Condition 2 ##########
 # Embedding model: lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct
 # Chunk: 每一條法條
 # Overlap: 無
-# Output file: laws_embedding_1chunk_0overlap.json
+# Output file: laws_embedding_1chunk_0overlap_Llama.json
 fir_emb_llama_1c0o = os.path.join(
     dir_embeddings,
     "laws_embedding_1chunk_0overlap_Llama.json"
@@ -75,14 +69,13 @@ EmbeddingByLlama(
     model_name = model_name,
     batch_size = 32
 )
-"""
 
-"""
+
 ########## Condition 3 ##########
 # Embedding model: lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct
 # Chunk: 每三條法條
 # Overlap: 一條法條
-# Output file: laws_embedding_3chunk_1overlap.json
+# Output file: laws_embedding_3chunk_1overlap_Llama.json
 fir_emb_llama_3c1o = os.path.join(
     dir_embeddings,
     "laws_embedding_3chunk_1overlap_Llama.json"
@@ -112,17 +105,16 @@ ChunkEmbeddingByLlama(
     model_name=model_name,
     output_path=fir_emb_llama_3c1o
 )
-"""
 
-"""
+
 ########## Condition 4 ##########
 # Embedding model: lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct
 # Chunk: 每1000個字
 # Overlap: 每200個字 (20%)
-# Output file: laws_embedding_1000chunk_200overlap.json
+# Output file: laws_embedding_1000chunk_200overlap_Llama.json
 fir_emb_llama_1000c200o = os.path.join(
     dir_embeddings,
-    "laws_embedding_1000chunk_200overlap.json"
+    "laws_embedding_1000chunk_200overlap_Llama.json"
 )
 
 # Read the input data
@@ -149,16 +141,16 @@ ChunkEmbeddingByLlama(
     model_name=model_name,
     output_path=fir_emb_llama_1000c200o
 )
-"""
+
 
 ########## Condition 5 ##########
 # Embedding model: lianghsun/Llama-3.2-Taiwan-Legal-3B-Instruct
 # Chunk: 每四條法條
 # Overlap: 二條法條
-# Output file: laws_embedding_4chunk_2overlap.json
+# Output file: laws_embedding_4chunk_2overlap_Llama.json
 fir_emb_llama_4chunk_2overlap = os.path.join(
     dir_embeddings,
-    "laws_embedding_4chunk_2overlap.json"
+    "laws_embedding_4chunk_2overlap_Llama.json"
 )
 
 # Read the input data

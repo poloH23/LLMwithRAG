@@ -1,28 +1,9 @@
-import os
 import json
 import torch
 from tqdm import tqdm
-from typing import Optional
-from lib.Utils import GetRoot
 from transformers import AutoTokenizer, AutoModel
 from sentence_transformers import SentenceTransformer
 
-
-def GetHfToken() -> Optional[str]:
-    # Load environment variables
-    GetRoot()
-
-    # Get ".token" file
-    fil_token = os.environ.get("PROJECT_ROOT") + os.getenv("HF_TOKEN")
-
-    # Get HuggingFace token
-    if os.path.exists(fil_token):
-        with open(fil_token, "r") as fil_token:
-            hf_token = fil_token.read().strip()
-            command = f"export HUGGINGFACE_TOKEN={hf_token}"
-            os.system(command)
-            return ">>> HuggingFace token applied."
-    return None
 
 def EmbeddingByMiniLM(
 input_path: str,
@@ -59,7 +40,6 @@ input_path: str,
         json.dump(embeddings, f, ensure_ascii=False, indent=4)
     print(f">>> The embedding file has been saved: {output_path}")
     return None
-
 
 def EmbeddingByLlama(
         input_path: str,
@@ -104,7 +84,6 @@ def EmbeddingByLlama(
     print(f">>> The embedding file has been saved: {output_path}")
     return None
 
-
 def SplitLongLawText(text: str, max_length=512) -> list:
     lis_result = [text[i:i + max_length] for i in range(0, len(text), max_length)]
     return lis_result
@@ -132,7 +111,6 @@ def GenerateChunksWithOverlap(
         chunks.append(chunk)
         start += chunk_size - overlap_size
     return chunks
-
 
 def GenerateChunksWithOverlapChar(
         lines: list,
@@ -196,5 +174,3 @@ def ChunkEmbeddingByLlama(
             output_path=output_path
         )
         return None
-
-
