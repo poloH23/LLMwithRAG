@@ -7,6 +7,7 @@ from lib.Utils import GetRoot
 from lib.Utils import GetHfToken
 from lib.Utils import GetLineAccess
 from lib.Utils import GetLineSecret
+from lib.Ngrok import StartNgrok
 from lib.RAG import ResponseWithJudgement
 
 
@@ -39,7 +40,7 @@ app = Flask(__name__)
 # Line Webhook 路由，接收来自 Line 平台的 Webhook 請求
 def callback():
     # 驗證Line簽名，確定請求是由 Line 伺服器發出
-    signature = request.headers["X-Line-Signature"]
+    signature = request.headers.get("X-Line-Signature", "")
     body = request.get_data(as_text=True)
     try:
         # 將請求內容傳送給 handler 處理
@@ -47,7 +48,7 @@ def callback():
     except InvalidSignatureError:
         # 驗證失敗回傳 HTTP 400 error
         abort(400)
-    return 'OK'
+    return "Webhook processed successfully."
 
 @handler.add(MessageEvent, message=TextMessage)
 # 事件處理
@@ -70,4 +71,25 @@ def handle_message(event):
 
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    # # Set the Python path
+    # python_path = os.environ.get("PROJECT_ROOT") + os.getenv("PYTHONPATH")
+    # env = os.environ.copy()
+    # env["PYTHONPATH"] = python_path
+    #
+    # # Start Flask service
+    # flask_process = subprocess.Popen(
+    #     ["python", "-m", "flask", "--app", "main.legal_linebot_local_ver", "run", "--host=0.0.0.0", "--port=5000"],
+    #     cwd=os.environ.get("PROJECT_ROOT"),
+    #     env=env
+    # )
+
+    # Start ngrok
+    ngrok_url, ngrok_process = StartNgrok(port=5000)
+
+    try:
+        app.run(host="0.0.0.0", port=5000)
+        # flask_process.wait()
+    except KeyboardInterrupt:
+        print(">>> 終止 Flask 和 Ngrok.")
+        # flask_process.terminate()
+        ngrok_process.terminate()
