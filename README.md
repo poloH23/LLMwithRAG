@@ -15,6 +15,21 @@ The **RAG-driven Taiwan Law Chatbot** is a legal question-answering chatbot desi
 - pip
 - Virtual Environment (optional but recommended)
 
+### Install Environment
+* Create a Conda environment using default name.
+```bash
+git clone https://github.com/your-github-username/RAG-Taiwan-Law-Chatbot.git
+cd RAG-Taiwan-Law-Chatbot
+conda env create -f ./bak/environment.yml
+```
+
+* Create a Conda environment using default name.
+```bash
+git clone https://github.com/your-github-username/RAG-Taiwan-Law-Chatbot.git
+cd RAG-Taiwan-Law-Chatbot
+conda env create -n my_env -f ./bak/environment.yml
+```
+
 ### Install Dependencies
 ```bash
 git clone https://github.com/your-github-username/RAG-Taiwan-Law-Chatbot.git
@@ -23,23 +38,30 @@ pip install -r requirements.txt
 ```
 
 ## 🚀 Usage
-
-### 1️⃣ Web Crawling for Legal Texts
+### 1、Web Crawling for Legal Texts
 ```bash
 python -m main.laws_web_crawling
 ```
 
-### 2️⃣ Generate Embeddings
+### 2、Generate Embeddings
 ```bash
 python -m main.laws_embedding
 ```
 
-### 3️⃣ Run the RAG Chatbot Locally
+### 3、Generate Embeddings for Comparing
+* Embedding strategy comparison.
+```bash
+python -m main.RAG_legal_chatbot_cmp
+```
+
+### 4、Run the RAG Chatbot Locally
+* Compare the effects of RAG
 ```bash
 python -m main.RAG_legal_chatbot
 ```
 
-### 4️⃣ Deploy LINE Chatbot
+### 5、Deploy LINE Chatbot
+* Run the command below and copy the 'Ngrok public URL' on the page of LINE Developers.
 ```bash
 python -m main.legal_linebot_local_ver
 ```

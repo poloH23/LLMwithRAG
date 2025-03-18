@@ -88,8 +88,6 @@ if __name__ == "__main__":
 
     try:
         app.run(host="0.0.0.0", port=5000)
-        # flask_process.wait()
     except KeyboardInterrupt:
         print(">>> 終止 Flask 和 Ngrok.")
-        # flask_process.terminate()
         ngrok_process.terminate()
